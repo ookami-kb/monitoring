@@ -80,7 +80,7 @@ Ext.define('Monitoring.view.Main', {
 											title: value,
 											source_code: Date.now(),
 											whitebrand_id: view.selectedWBID,
-											source_type: 'FTP'
+											source_type: 'agents'
 										};
 										store.add(data);
 										store.sync();

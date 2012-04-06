@@ -1,4 +1,4 @@
-var generatorURL = 'http://192.168.139.116:8000';
+var generatorURL = 'http://upload.v-zabote.ru';
 
 function exportProducts() {
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Экспорт продуктов'});
