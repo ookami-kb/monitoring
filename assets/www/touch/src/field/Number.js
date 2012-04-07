@@ -123,7 +123,10 @@ Ext.define('Ext.field.Number', {
             value = Math.min(value, maxValue);
         }
 
-        return parseFloat(value);
+	value = parseFloat(value);
+	return (isNaN(value)) ? '' : value;
+
+        //return parseFloat(value);
     },
 
     getValue: function() {

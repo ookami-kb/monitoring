@@ -26,7 +26,7 @@ Ext.define('Monitoring.store.Salepoints', {
 	    			// var userPosition = new google.maps.LatLng(lat, lon);
 	    			// var salepointPosition = new google.maps.LatLng(coords.lat, coords.lon);
 	    			// return google.maps.geometry.spherical.computeDistanceBetween(userPosition, salepointPosition) < 30000;
-	    			return calculateDistance(lat, lon, coords.lat, coords.lon) < 30000;
+	    			return calculateDistance(lat, lon, coords.lat, coords.lon) < 500000;
 	    		}
 	    		return false;
     	}})]

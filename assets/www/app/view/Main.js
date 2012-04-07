@@ -71,18 +71,24 @@ Ext.define('Monitoring.view.Main', {
 						        'Введите сведения о продукте',
 						        function(buttonId, value) {
 						        	if (buttonId == 'cancel') return;
-						            if (buttonId == 'ok') {
-						            	var store = Ext.StoreManager.get('Products');
-										var data = {
-											is_new: true,
-											title_extra: '',
-											manufacturer: '',
-											title: value,
-											source_code: Date.now(),
-											whitebrand_id: view.selectedWBID,
-											source_type: 'agents'
-										};
-										store.add(data);
+						            if (buttonId == 'ok' && value) {
+						            	var store = Ext.StoreManager.get('Offers');
+						            	var salepoints = Ext.data.StoreManager.lookup('Salepoints');
+						            	salepoints.setFilters({filterFn: function(item) {return true;}});
+										salepoints.filter();
+										var source_code = Date.now();
+										salepoints.each(function(salepoint) {
+											var data = {
+												is_new: true,
+												title: value,
+												source_code: source_code,
+												whitebrand_id: view.selectedWBID,
+												salepoint_id: salepoint.get('ext_id'),
+												source_type: 'agents',
+												price: null
+											};
+											store.add(data);
+										});
 										store.sync();
 						            }
 						        },

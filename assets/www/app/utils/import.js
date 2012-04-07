@@ -54,15 +54,11 @@ function exportSalepoints() {
 	});
 	salepoints.setFilters(filters);
 	salepoints.load();
-	// console.log(data);
-	// return;
 	var to_export = JSON.stringify({objects: data});
-	// console.log(to_export);
-	// return;
 	var oXHR = new XMLHttpRequest();
 	oXHR.onreadystatechange = function (aEvt) {
 		if (oXHR.readyState == 4) {
-	  		exportProducts();
+	  		exportOffers();
 	  	}
  	};	
 	oXHR.open("PATCH", generatorURL + '/api/v1/salepoint/?username='+ username +'&password='+ password,true);
@@ -75,7 +71,7 @@ function exportOffers() {
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Экспорт предложений'});
 	var offers = Ext.data.StoreManager.lookup('Offers');
 	var filters = offers.getFilters();
-	offers.setFilters({filterFn: function() {return true;}});
+	offers.setFilters({filterFn: function(item) {return item.get('price') ? true : false;}});
 	offers.filter();
 	var data = [];
 	offers.each(function(offer) {
@@ -83,19 +79,21 @@ function exportOffers() {
 			source_code: offer.get('source_code'),
 			source_type: offer.get('source_type'),
 			salepoint_id: offer.get('salepoint_id'),
-			price: offer.get('price')
+			price: offer.get('price'),
+			title: offer.get('title'),
+			white_brand: offer.get('whitebrand_id'),
+			username: username
 		});
 	});
-	offers.setFilters(filters);
-	offers.load();
-	// console.log(data);
-	// return;
 	var to_export = JSON.stringify({objects: data});
 	var oXHR = new XMLHttpRequest();
 	oXHR.onreadystatechange = function (aEvt) {
 		if (oXHR.readyState == 4) {
+			offers.setFilters({filterFn: function() {return true;}});
 			offers.removeAll();
 			offers.sync();
+			offers.setFilters(filters);
+			offers.filter();
 	  		importSalepoints();
 	  	}
  	};	
@@ -121,35 +119,40 @@ function importProducts(url, offset, total) {
 			Ext.Msg.alert('Ошибка', 'Импорт не удался');
 		},
 		success: function(result) {
-			console.log(result);
-			var products = Ext.data.StoreManager.lookup('Products');
+			var offers = Ext.data.StoreManager.lookup('Offers');
+			var filters = offers.getFilters();
 			if (!url) {
-				products.setFilters({filterFn: function(item) {return true;}});
-				products.filter();
-				var x = products.getData().items.slice();
-				products.remove(x);
-				products.sync();
+				offers.setFilters({filterFn: function(item) {return true;}});
+				offers.filter();
+				offers.removeAll();
 			}
 			
 			for (var i=0; i<result.objects.length; i++) {
 				var data = result.objects[i];
-				var obj = {
-					title: data.title,
-					manufacturer: data.manufacturer,
-					whitebrand_id: data.whitebrand_id,
-					title_extra: data.title_extra,
-					source_code: data.source_code,
-					source_type: data.source_type,
-					type: data.type,
-					is_new: false
-				}
-				products.add(obj)[0];
+				var salepoints = Ext.data.StoreManager.lookup('Salepoints');
+				salepoints.setFilters({filterFn: function(item) {return true;}});
+				salepoints.filter();
+				salepoints.each(function(salepoint) {
+					var new_offer = {
+						title: data.title+'. '+data.title_extra+'. '+data.manufacturer,
+						whitebrand_id: data.whitebrand_id,
+						source_code: data.source_code,
+						source_type: data.source_type,
+						is_new: false,
+						salepoint_id: salepoint.get('ext_id'),
+						price: null
+					}
+					offers.add(new_offer);
+				});
 			}
-			products.sync();
+			offers.sync();
+			offers.setFilters(filters);
+			offers.filter();
 			
 			if (result.meta.next == null) {
 				Ext.Viewport.setMasked(false);
 				Ext.Msg.alert('Информация', 'Импорт успешно завершен');
+				Ext.getCmp('main-view').pop(10);
 			} else {
 				importProducts(generatorURL + result.meta.next, result.meta.offset + result.meta.limit, result.meta.total_count);
 			}
@@ -209,6 +212,8 @@ function importSalepoints() {
 		success: function(result) {
 			console.log(result);
 			var salepoints = Ext.data.StoreManager.lookup('Salepoints');
+			salepoints.setFilters({filterFn: function(item) {return true;}});
+			salepoints.filter();
 			salepoints.removeAll();
 			
 			// перебираем все магазины и добавляем их в store
