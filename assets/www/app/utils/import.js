@@ -107,7 +107,7 @@ function importProducts(url, offset, total) {
 	var message = offset && total ? 'Импорт продуктов: ' + offset + ' из ' + total : 'Импорт продуктов';
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: message});
 	Ext.data.JsonP.request({
-		url: url ? url : generatorURL + '/api/v1/product/',
+		url: url ? url : generatorURL + '/api/v1/product/?limit=5',
 		callbackKey: 'callback',
 		params: {
 			format: 'jsonp',
@@ -120,21 +120,25 @@ function importProducts(url, offset, total) {
 		},
 		success: function(result) {
 			var offers = Ext.data.StoreManager.lookup('Offers');
-			var filters = offers.getFilters();
+			// var filters = offers.getFilters();
+			
+			var salepoints = Ext.data.StoreManager.lookup('Salepoints');
+			
 			if (!url) {
 				offers.setFilters({filterFn: function(item) {return true;}});
 				offers.filter();
 				offers.removeAll();
+				
+				salepoints.setFilters({filterFn: function(item) {return true;}});
+				salepoints.filter();
 			}
+			
 			
 			for (var i=0; i<result.objects.length; i++) {
 				var data = result.objects[i];
-				var salepoints = Ext.data.StoreManager.lookup('Salepoints');
-				salepoints.setFilters({filterFn: function(item) {return true;}});
-				salepoints.filter();
 				salepoints.each(function(salepoint) {
 					var new_offer = {
-						title: data.title+'. '+data.title_extra+'. '+data.manufacturer,
+						title: data.title+'. '+data.manufacturer+'. '+data.title_extra,
 						whitebrand_id: data.whitebrand_id,
 						source_code: data.source_code,
 						source_type: data.source_type,
@@ -146,10 +150,11 @@ function importProducts(url, offset, total) {
 				});
 			}
 			offers.sync();
-			offers.setFilters(filters);
-			offers.filter();
+			// offers.setFilters(filters);
+			// offers.filter();
 			
 			if (result.meta.next == null) {
+				
 				Ext.Viewport.setMasked(false);
 				Ext.Msg.alert('Информация', 'Импорт успешно завершен');
 				Ext.getCmp('main-view').pop(10);
@@ -175,7 +180,6 @@ function importBrands() {
 			Ext.Msg.alert('Ошибка', 'Импорт не удался');
 		},
 		success: function(result) {
-			console.log(result);
 			var brands = Ext.data.StoreManager.lookup('Brands');
 			brands.removeAll();
 			
@@ -195,10 +199,11 @@ function importBrands() {
 	});
 }
 
-function importSalepoints() {
-	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Импорт магазинов'});
+function importSalepoints(url, offset, total) {
+	var message = offset && total ? 'Импорт магазинов: ' + offset + ' из ' + total : 'Импорт магазинов';
+	Ext.Viewport.setMasked({xtype: 'loadmask', message: message});
 	Ext.data.JsonP.request({
-		url: generatorURL + '/api/v1/salepoint/',
+		url: url ? url : generatorURL + '/api/v1/salepoint/?limit=5',
 		callbackKey: 'callback',
 		params: {
 			format: 'jsonp',
@@ -210,11 +215,12 @@ function importSalepoints() {
 			Ext.Msg.alert('Ошибка', 'Импорт не удался');
 		},
 		success: function(result) {
-			console.log(result);
 			var salepoints = Ext.data.StoreManager.lookup('Salepoints');
-			salepoints.setFilters({filterFn: function(item) {return true;}});
-			salepoints.filter();
-			salepoints.removeAll();
+			if (!url) {
+				salepoints.setFilters({filterFn: function(item) {return true;}});
+				salepoints.filter();
+				salepoints.removeAll();
+			}
 			
 			// перебираем все магазины и добавляем их в store
 			for (var i=0; i<result.objects.length; i++) {
@@ -231,7 +237,11 @@ function importSalepoints() {
 			}
 			salepoints.sync();
 			
-			importBrands();
+			if (result.meta.next == null) {
+				importBrands();
+			} else {
+				importSalepoints(generatorURL + result.meta.next, result.meta.offset + result.meta.limit, result.meta.total_count);
+			}
 		}
 	});
 }
