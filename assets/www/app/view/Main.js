@@ -32,6 +32,21 @@ Ext.define('Monitoring.view.Main', {
 	    			if (b) b.destroy();
 	    		}
 	    		if (value.getId() == 'sp-list') {
+	    			view.getNavigationBar().leftBox.add({
+			    		xtype: 'button',
+			    		id: 'geo-btn',
+			    		ui: 'plain',
+			    		iconMask: true,
+			    		iconCls: 'maps',
+			    		handler: function() {
+			    			if (geo) {
+			    				navigator.geolocation.clearWatch(geo);
+			    				geo = null;
+			    			} else {
+			    				geo = navigator.geolocation.watchPosition(geoSuccess, geoError, { enableHighAccuracy: true });
+			    			}
+					    }
+				    });
 	    			view.getNavigationBar().rightBox.add({
 			    		xtype: 'button',
 			    		id: 'add-salepoint-btn',
@@ -49,7 +64,9 @@ Ext.define('Monitoring.view.Main', {
 			    	});
 	    		} else {
 	    			var b = Ext.getCmp('add-salepoint-btn');
+	    			var c = Ext.getCmp('geo-btn');
 	    			if (b) b.destroy();
+	    			if (c) c.destroy();
 	    		}
 	    		if (value.getId() == 'pr-list') {
 	    			view.getNavigationBar().rightBox.add({

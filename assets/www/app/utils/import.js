@@ -165,7 +165,8 @@ function importBrands() {
 		params: {
 			format: 'jsonp',
 			username: username,
-			password: password
+			password: password,
+			limit: 30
 		},
 		failure: function() {
 			Ext.Viewport.setMasked(false);
