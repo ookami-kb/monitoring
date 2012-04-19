@@ -3,9 +3,17 @@ Ext.define('Monitoring.store.Products', {
 	config: {
 		model: 'Monitoring.model.Product',
 	    proxy: {
-	        type: 'localstorage',
-	        id: 'products'
-	    },
+	        // type: 'localstorage',
+	        // id: 'products'
+	        dbConfig: {
+					tablename: 'contacts_tables',
+					dbConn: Ext.DbConnection
+					//dbQuery 	: 'SELECT * FROM contact_table limit 0,1' //dbQuery only works with read operation
+				},
+				reader: {
+					type: 'array'
+				}
+		},	
 	    autoLoad: true,
 	    sorters: [{
 	    	sorterFn: function(r1, r2) {

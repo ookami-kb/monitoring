@@ -16,22 +16,22 @@ Ext.define('Monitoring.view.ProductListItem', {
 		name: {
             cls: 'x-name',
             flex: 2,
-            listeners: {
-            	painted: function(component, opts) {
-            		if (component.parent.getRecord().get('is_new') == true) {
-            			component.addCls('is-new');
-            		}
-            	}
-            }
+            // listeners: {
+            	// painted: function(component, opts) {
+            		// if (component.parent.getRecord().get('is_new') == true) {
+            			// component.addCls('is-new');
+            		// }
+            	// }
+            // }
         },
         price: {
         	cls: 'x-price',
         	flex: 1,
         	listeners: {
         		change: function(field, newValue, oldValue, opts) {
-        			field.parent.getRecord().set({price: newValue});
-        			field.parent.getRecord().save();
-        			Ext.data.StoreManager.lookup('Offers').sync();
+        			// field.parent.getRecord().set({price: newValue});
+        			// field.parent.getRecord().save();
+        			// Ext.data.StoreManager.lookup('Offers').sync();
         		}
         	}
         },

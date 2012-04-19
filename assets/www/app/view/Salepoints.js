@@ -25,9 +25,17 @@ Ext.define('Monitoring.view.Salepoints', {
 	    		} else {
 	    			v.selectedWBID = 0;
 		    	
-			    	var store = Ext.StoreManager.get('Products');
+			    	var store = Ext.StoreManager.get('Offers');
 			    	
-			    	store.setFilters({property: 'whitebrand_id', value: 0, exactMatch: true});
+			    	store.setFilters(
+			    		{
+			    			filterFn: function(item) {
+					    		if (item.get('whitebrand_id') == v.selectedWBID &&
+					    			item.get('salepoint_id') == v.selectedSPid) {return true;}
+					    		return false;
+				    		}
+			    		}
+		    		);
 			    	store.filter();
 			    	store.sort();
 			    	
