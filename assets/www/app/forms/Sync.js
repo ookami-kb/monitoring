@@ -34,7 +34,7 @@ Ext.define('Monitoring.forms.Sync', {
             text: 'Синхронизация',
             ui: 'confirm',
 			handler: function() {
-				importSalepoints();
+				exportOffers();
 			}
         }]
 	}
