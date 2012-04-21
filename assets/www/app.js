@@ -20,30 +20,28 @@ function geoSuccess(position) {
     
     main_map.setMapCenter({latitude: lat, longitude: lon});
     
-    Ext.data.StoreManager.lookup('Salepoints').sort();
-    Ext.data.StoreManager.lookup('Salepoints').filter();
+    // Ext.data.StoreManager.lookup('Salepoints').sort();
+    // Ext.data.StoreManager.lookup('Salepoints').filter();
     
     var markers = main_map.markers;
     for (var i=0; i<markers.length; i++) {
     	markers[i].setMap(null);
     }
     markers = [];
-    var salepoints = Ext.data.StoreManager.lookup('Salepoints').getData().items;
-    for (var i=0; i<salepoints.length; i++) {
-    	if (i > 9) break;
-    	var st_coords = stringToCoords(salepoints[i].data.coords);
+    salepointsStore.each(function(salepoint) {
+    	var st_coords = stringToCoords(salepoint.get('coords'));
     	var st_marker = new google.maps.Marker({
     		map: main_map.getMap(),
     		position: new google.maps.LatLng(st_coords.lat, st_coords.lon),
-    		icon: salepoints[i].data.type == 'fuel' ? 'st_marker.png' : 'grocery.png',
-    		text: salepoints[i].data.name + '<br />' + salepoints[i].data.address
+    		icon: salepoint.get('type') == 'fuel' ? 'st_marker.png' : 'grocery.png',
+    		text: salepoint.get('name') + '<br />' + salepoint.get('address')
     	});
     	markers.push(st_marker);
     	google.maps.event.addListener(markers[markers.length-1], 'click', function() {
     		main_map.info.setContent(this.text);
     		main_map.info.open(main_map.getMap(), this);
     	});
-    }
+    });
     main_map.markers = markers;
 }
 
