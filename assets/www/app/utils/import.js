@@ -105,6 +105,9 @@ function exportOffers() {
 }
 
 function importProducts(url, offset, total) {
+	if (!url) {
+		offersStore.getProxy().truncate();
+	}
 	var message = offset && total ? 'Импорт продуктов: ' + offset + ' из ' + total : 'Импорт продуктов';
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: message});
 	Ext.data.JsonP.request({
@@ -122,10 +125,6 @@ function importProducts(url, offset, total) {
 		},
 		success: function(result) {
 			var salepoints = salepointsStore.load();
-			
-			if (!url) {
-				offersStore.getProxy().truncate();
-			}
 			
 			var db = openDatabase('monitoring', '1.19', 'monitoring', 2 * 1024 * 1024);
 			db.transaction(function (tx) {

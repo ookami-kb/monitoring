@@ -1,3 +1,11 @@
+function onPhotoSuccess(imageURI) {
+	Ext.Msg.alert('Photo', imageURI);
+}
+
+function onPhotoFail(message) {
+	Ext.Msg.alert('Photo', message);
+}
+
 // Главная вьюха, к которой будут добавляться все списки
 Ext.define('Monitoring.view.Main', {
     extend: 'Ext.navigation.View',
@@ -45,7 +53,22 @@ Ext.define('Monitoring.view.Main', {
 			    				geo = navigator.geolocation.watchPosition(geoSuccess, geoError, { enableHighAccuracy: true });
 			    			}
 					    }
-				    });
+				    }
+				    // {
+				    	// xtype: 'button',
+			    		// id: 'photo-btn',
+			    		// ui: 'plain',
+			    		// iconMask: true,
+			    		// iconCls: 'photo1',
+			    		// handler: function() {
+			    			// Ext.Msg.alert('Photo', 'Taking Photo');
+			    			// navigator.camera.getPicture(onPhotoSuccess, onPhotoFail, { 
+			    				// quality: 50, 
+			    				// destinationType: Camera.DestinationType.FILE_URI 
+		    				// }); 
+					    // }
+				    // }
+				    );
 	    			// view.getNavigationBar().rightBox.add({
 			    		// xtype: 'button',
 			    		// id: 'add-salepoint-btn',

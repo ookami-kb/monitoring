@@ -192,20 +192,26 @@ Ext.application({
 			    store: brandsStore,
 			    listeners: {
 			    	select: function(list, record, opts) {
+			    		Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Загрузка...'});
 				    	var v = Ext.getCmp('main-view');
 				    	v.selectedWBID = record.get('ext_id');
 		
-				    	var query = 'select * from offers_tables WHERE whitebrand_id = ' + v.selectedWBID + ' and salepoint_id = ' + v.selectedSPid;
+				    	var query = 'select * from offers_tables WHERE whitebrand_id = ' + v.selectedWBID + ' and salepoint_id = ' + v.selectedSPid + ' order by title';
 				    	offersStore.load({
-				    		query : query
+				    		query : query,
+				    		callback: function(items) {
+				    			console.log(items);
+				    			var products = Ext.create('Monitoring.view.ProductList', {
+						    		title: record.get('name')
+					    		});
+						    	
+						    	Ext.Viewport.setMasked(false);
+						    	v.push(products);
+						    	list.deselectAll();
+				    		}
 			    		});
 				    	
-				    	var products = Ext.create('Monitoring.view.ProductList', {
-				    		title: record.get('name')
-			    		});
 				    	
-				    	v.push(products);
-				    	list.deselectAll();
 				    }
 			    }
 		    }
@@ -228,11 +234,13 @@ Ext.application({
 		    			v.selectedSPid = record.get('ext_id');
 			    		// для продуктовых ТТ выводим список белых брендов
 			    		if (record.get('type') == 'product') {
-			    			brandsStore.load();
+			    			brandsStore.load({
+			    				query: 'select * from brands_tables order by name'
+			    			});
 			    			var l = Ext.create('Monitoring.view.BrandList', {title: record.get('name')});	
 			    		} else {
 			    			v.selectedWBID = 0;
-				    		var query = 'select * from offers_tables WHERE whitebrand_id = ' + v.selectedWBID + ' and salepoint_id = ' + v.selectedSPid;
+				    		var query = 'select * from offers_tables WHERE whitebrand_id = ' + v.selectedWBID + ' and salepoint_id = ' + v.selectedSPid + ' order by title';
 					    	offersStore.load({
 					    		query : query
 				    		});
