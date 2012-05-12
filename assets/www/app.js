@@ -61,7 +61,7 @@ Ext.application({
 			   'Ext.field.Password', 'Monitoring.forms.Sync', 
 			   'Ext.data.reader.Array'],
 
-    views: ['Main', 'MainMap', 'SalepointMap'],
+    views: ['Main', 'SalepointMap'],
 
     launch: function() {
     	Ext.DbConnection = Ext.create('Ext.Sqlite.Connection',dbconnval);
@@ -80,6 +80,7 @@ Ext.application({
 		            {name: 'title', type: 'string'},
 		            {name: 'whitebrand_id', type: 'int'},
 		            {name: 'is_new', type: 'boolean'},
+		            {name: 'sort_weight', type: 'int'},
 		            {
 						name: 'id',
 						type: 'int',
@@ -196,11 +197,11 @@ Ext.application({
 				    	var v = Ext.getCmp('main-view');
 				    	v.selectedWBID = record.get('ext_id');
 		
-				    	var query = 'select * from offers_tables WHERE whitebrand_id = ' + v.selectedWBID + ' and salepoint_id = ' + v.selectedSPid + ' order by title';
+				    	var query = 'select * from offers_tables WHERE whitebrand_id = ' + v.selectedWBID + ' and salepoint_id = ' + v.selectedSPid + ' order by sort_weight, title';
 				    	offersStore.load({
 				    		query : query,
 				    		callback: function(items) {
-				    			console.log(items);
+				    			// console.log(items);
 				    			var products = Ext.create('Monitoring.view.ProductList', {
 						    		title: record.get('name')
 					    		});
@@ -240,7 +241,7 @@ Ext.application({
 			    			var l = Ext.create('Monitoring.view.BrandList', {title: record.get('name')});	
 			    		} else {
 			    			v.selectedWBID = 0;
-				    		var query = 'select * from offers_tables WHERE whitebrand_id = ' + v.selectedWBID + ' and salepoint_id = ' + v.selectedSPid + ' order by title';
+				    		var query = 'select * from offers_tables WHERE whitebrand_id = ' + v.selectedWBID + ' and salepoint_id = ' + v.selectedSPid + ' order by sort_weight, title';
 					    	offersStore.load({
 					    		query : query
 				    		});
@@ -289,11 +290,11 @@ Ext.application({
     		tabBarPosition: 'bottom',
     		items: [
     			v,
-    			Ext.create('Monitoring.view.MainMap'),
+    			// Ext.create('Monitoring.view.MainMap'),
     			Ext.create('Monitoring.forms.Sync')
     		]
     	});
     	
-    	navigator.geolocation.getCurrentPosition(geoSuccess, geoError, { enableHighAccuracy: true });
+    	// navigator.geolocation.getCurrentPosition(geoSuccess, geoError, { enableHighAccuracy: true });
     }
 });

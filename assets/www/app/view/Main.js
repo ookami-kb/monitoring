@@ -38,22 +38,22 @@ Ext.define('Monitoring.view.Main', {
 	    			var b = Ext.getCmp('confirm-salepoint-position');
 	    			if (b) b.destroy();
 	    		}
-	    		if (value.getId() == 'sp-list') {
-	    			view.getNavigationBar().leftBox.add({
-			    		xtype: 'button',
-			    		id: 'geo-btn',
-			    		ui: 'plain',
-			    		iconMask: true,
-			    		iconCls: 'maps',
-			    		handler: function() {
-			    			if (geo) {
-			    				navigator.geolocation.clearWatch(geo);
-			    				geo = null;
-			    			} else {
-			    				geo = navigator.geolocation.watchPosition(geoSuccess, geoError, { enableHighAccuracy: true });
-			    			}
-					    }
-				    }
+	    		// if (value.getId() == 'sp-list') {
+	    			// view.getNavigationBar().leftBox.add({
+			    		// xtype: 'button',
+			    		// id: 'geo-btn',
+			    		// ui: 'plain',
+			    		// iconMask: true,
+			    		// iconCls: 'maps',
+			    		// handler: function() {
+			    			// if (geo) {
+			    				// navigator.geolocation.clearWatch(geo);
+			    				// geo = null;
+			    			// } else {
+			    				// geo = navigator.geolocation.watchPosition(geoSuccess, geoError, { enableHighAccuracy: true });
+			    			// }
+					    // }
+				    // }
 				    // {
 				    	// xtype: 'button',
 			    		// id: 'photo-btn',
@@ -68,7 +68,7 @@ Ext.define('Monitoring.view.Main', {
 		    				// }); 
 					    // }
 				    // }
-				    );
+				    // );
 	    			// view.getNavigationBar().rightBox.add({
 			    		// xtype: 'button',
 			    		// id: 'add-salepoint-btn',
@@ -84,12 +84,12 @@ Ext.define('Monitoring.view.Main', {
 			    			// view.push(form);
 			    		// }
 			    	// });
-	    		} else {
-	    			var b = Ext.getCmp('add-salepoint-btn');
-	    			var c = Ext.getCmp('geo-btn');
-	    			if (b) b.destroy();
-	    			if (c) c.destroy();
-	    		}
+	    		// } else {
+	    			// var b = Ext.getCmp('add-salepoint-btn');
+	    			// var c = Ext.getCmp('geo-btn');
+	    			// if (b) b.destroy();
+	    			// if (c) c.destroy();
+	    		// }
 	    		// if (value.getId() == 'pr-list') {
 	    			// view.getNavigationBar().rightBox.add({
 			    		// xtype: 'button',

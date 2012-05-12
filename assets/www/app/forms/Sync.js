@@ -36,6 +36,11 @@ Ext.define('Monitoring.forms.Sync', {
 			handler: function() {
 				exportOffers();
 			}
+        },
+        {
+        	xtype: 'label',
+        	html: 'V1.0 11.05.2012',
+        	id: 'version-info'
         }]
 	}
 });

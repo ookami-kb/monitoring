@@ -360,10 +360,10 @@ Ext.define('Ext.data.proxy.SqliteStorage', {
     /**
      * Destroys all records stored in the proxy 
      */
-    truncate: function(tablename) {
+    truncate: function(callback) {
         var me = this;
         var sql = 'DELETE FROM ' + me.config.dbConfig.tablename;  
-        me.queryDB(me.getDb(), sql, function(){}, function(){});
+        me.queryDB(me.getDb(), sql, function(){if (callback) callback();}, function(){});
         return true;
     }
 });
