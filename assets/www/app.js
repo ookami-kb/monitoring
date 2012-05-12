@@ -1,44 +1,5 @@
 var lat = 0, lon = 0;
 var geo = null;
-<<<<<<< HEAD
-function geoSuccess(position) {
-	lat = position.coords.latitude;
-	lon = position.coords.longitude;
-	
-    var main_map = Ext.getCmp('main-map');
-    main_map.userMarker.setPosition(new google.maps.LatLng(lat, lon));
-    
-    main_map.setMapCenter({latitude: lat, longitude: lon});
-    
-    Ext.data.StoreManager.lookup('Salepoints').sort();
-    Ext.data.StoreManager.lookup('Salepoints').filter();
-    
-    var markers = main_map.markers;
-    for (var i=0; i<markers.length; i++) {
-    	markers[i].setMap(null);
-    }
-    markers = [];
-    var salepoints = Ext.data.StoreManager.lookup('Salepoints').getData().items;
-    for (var i=0; i<salepoints.length; i++) {
-    	if (i > 9) break;
-    	var st_coords = stringToCoords(salepoints[i].data.coords);
-    	var st_marker = new google.maps.Marker({
-    		map: main_map.getMap(),
-    		position: new google.maps.LatLng(st_coords.lat, st_coords.lon),
-    		icon: salepoints[i].data.type == 'fuel' ? 'st_marker.png' : 'grocery.png',
-    		text: salepoints[i].data.name + '<br />' + salepoints[i].data.address
-    	});
-    	markers.push(st_marker);
-    	google.maps.event.addListener(markers[markers.length-1], 'click', function() {
-    		main_map.info.setContent(this.text);
-    		main_map.info.open(main_map.getMap(), this);
-    	});
-    }
-    main_map.markers = markers;
-}
-
-=======
-
 var modelobj;
 Ext.ns('DbConnection');
 
@@ -49,44 +10,6 @@ var dbconnval = {
 
 var offersStore, salepointsStore, brandsStore;
 
-function geoSuccess(position) {
-	lat = position.coords.latitude;
-	lon = position.coords.longitude;
-	
-    var main_map = Ext.getCmp('main-map');
-    main_map.userMarker.setPosition(new google.maps.LatLng(lat, lon));
-    
-    main_map.setMapCenter({latitude: lat, longitude: lon});
-    
-    // Ext.data.StoreManager.lookup('Salepoints').sort();
-    // Ext.data.StoreManager.lookup('Salepoints').filter();
-    
-    var markers = main_map.markers;
-    for (var i=0; i<markers.length; i++) {
-    	markers[i].setMap(null);
-    }
-    markers = [];
-    salepointsStore.each(function(salepoint) {
-    	var st_coords = stringToCoords(salepoint.get('coords'));
-    	var st_marker = new google.maps.Marker({
-    		map: main_map.getMap(),
-    		position: new google.maps.LatLng(st_coords.lat, st_coords.lon),
-    		icon: salepoint.get('type') == 'fuel' ? 'st_marker.png' : 'grocery.png',
-    		text: salepoint.get('name') + '<br />' + salepoint.get('address')
-    	});
-    	markers.push(st_marker);
-    	google.maps.event.addListener(markers[markers.length-1], 'click', function() {
-    		main_map.info.setContent(this.text);
-    		main_map.info.open(main_map.getMap(), this);
-    	});
-    });
-    main_map.markers = markers;
-}
-
->>>>>>> 85a99a50f530da65fbce63745011a4bf8c40b34e
-function geoError(error) {
-	console.log(error);
-}
 // храним имя пользователя и пароль
 var username = localStorage.getItem('stations_username');
 var password = localStorage.getItem('stations_password');
@@ -334,63 +257,5 @@ Ext.application({
     		]
     	});
     	
-<<<<<<< HEAD
-    	navigator.geolocation.getCurrentPosition(geoSuccess, geoError, { enableHighAccuracy: true });
-    	
-        // var geo = new Ext.util.Geolocation({
-		    // autoUpdate: true,
-		    // allowHighAccuracy: true,
-		    // listeners: {
-		        // locationupdate: function(geo) {
-		        	// // console.log('Accuracy:');
-		        	// // console.log(geo);
-	        		// lat = geo.getLatitude();
-	            	// lon = geo.getLongitude();
-// 	            	
-	            	// // Ext.Viewport.setMasked({xtype: 'loadmask', message: lat + ' - ' + lon});	
-// 		            
-		            // var main_map = Ext.getCmp('main-map');
-		            // main_map.userMarker.setPosition(new google.maps.LatLng(lat, lon));
-// 		            
-		            // main_map.setMapCenter({latitude: lat, longitude: lon});
-// 		            
-		            // Ext.data.StoreManager.lookup('Salepoints').sort();
-		            // Ext.data.StoreManager.lookup('Salepoints').filter();
-// 		            
-		            // var markers = main_map.markers;
-		            // for (var i=0; i<markers.length; i++) {
-		            	// markers[i].setMap(null);
-		            // }
-		            // markers = [];
-		            // var salepoints = Ext.data.StoreManager.lookup('Salepoints').getData().items;
-		            // for (var i=0; i<salepoints.length; i++) {
-		            	// if (i > 9) break;
-		            	// var st_coords = stringToCoords(salepoints[i].data.coords);
-		            	// var st_marker = new google.maps.Marker({
-		            		// map: main_map.getMap(),
-		            		// position: new google.maps.LatLng(st_coords.lat, st_coords.lon),
-		            		// icon: salepoints[i].data.type == 'fuel' ? 'st_marker.png' : 'grocery.png',
-		            		// text: salepoints[i].data.name + '<br />' + salepoints[i].data.address
-		            	// });
-		            	// markers.push(st_marker);
-		            	// google.maps.event.addListener(markers[markers.length-1], 'click', function() {
-		            		// main_map.info.setContent(this.text);
-		            		// main_map.info.open(main_map.getMap(), this);
-		            	// });
-		            // }
-		            // main_map.markers = markers;
-		        // },
-		        // locationerror: function(geo, bTimeout, bPermissionDenied, bLocationUnavailable, message) {
-		            // if(bTimeout){
-		                // alert('Timeout occurred.');
-		            // } else {
-		                // alert('Error occurred.');
-		            // }
-		        // }
-		    // }
-		// });
-=======
-    	// navigator.geolocation.getCurrentPosition(geoSuccess, geoError, { enableHighAccuracy: true });
->>>>>>> 85a99a50f530da65fbce63745011a4bf8c40b34e
     }
 });

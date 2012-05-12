@@ -189,11 +189,7 @@ function importBrands(truncated) {
 			format: 'jsonp',
 			username: username,
 			password: password,
-<<<<<<< HEAD
-			limit: 30
-=======
 			limit: 0
->>>>>>> 85a99a50f530da65fbce63745011a4bf8c40b34e
 		},
 		failure: function() {
 			Ext.Viewport.setMasked(false);
