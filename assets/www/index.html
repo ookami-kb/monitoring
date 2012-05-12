@@ -8,9 +8,23 @@
 		#ext-container-3 {
 			z-index: 10;
 		}
+		#photo-btn {
+			z-index: 10;
+		}
+		.is-new {
+			font-weight: bold;
+		}
+		.product-list-item {
+			margin: 5px;
+		}
+		#version-info {
+			margin: 10px;
+			font-style: italic;
+			text-align: right;
+		}
 	</style>
 
-	<script type="text/javascript" src="http://maps.google.com/maps/api/js?libraries=geometry&sensor=true"></script>
+	<!--<script type="text/javascript" src="http://maps.google.com/maps/api/js?libraries=geometry&sensor=true"></script>-->
 	<script type="text/javascript" src="app/utils/coords.js"></script>
 	<script type="text/javascript" src="app/utils/import.js"></script>
     <script type="text/javascript" src="touch/sencha-touch-debug.js"></script>
@@ -21,6 +35,8 @@
           paths: { 'Ext': 'touch/src' }
       });
     </script>
+    <script type="text/javascript" src="SqliteConnection.js"></script>
+    <script type="text/javascript" src="SqliteProxy.js"></script>
     <script type="text/javascript" src="app.js"></script>
 </head>
 <body></body>

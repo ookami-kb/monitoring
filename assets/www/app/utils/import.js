@@ -1,6 +1,7 @@
 var generatorURL = 'http://upload.v-zabote.ru';
 
 function exportProducts() {
+	console.log('Export products - start');
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Экспорт продуктов'});
 	var salepoints = Ext.data.StoreManager.lookup('Products');
 	var filters = salepoints.getFilters();
@@ -26,6 +27,7 @@ function exportProducts() {
 	var oXHR = new XMLHttpRequest();
 	oXHR.onreadystatechange = function (aEvt) {
 		if (oXHR.readyState == 4) {
+			console.log('Export products - end');
 	  		exportOffers();
 	  	}
  	};	
@@ -36,6 +38,7 @@ function exportProducts() {
 }
 
 function exportSalepoints() {
+	console.log('Export salepoints - start');
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Экспорт торговых точек'});
 	var salepoints = Ext.data.StoreManager.lookup('Salepoints');
 	var filters = salepoints.getFilters();
@@ -54,15 +57,12 @@ function exportSalepoints() {
 	});
 	salepoints.setFilters(filters);
 	salepoints.load();
-	// console.log(data);
-	// return;
 	var to_export = JSON.stringify({objects: data});
-	// console.log(to_export);
-	// return;
 	var oXHR = new XMLHttpRequest();
 	oXHR.onreadystatechange = function (aEvt) {
 		if (oXHR.readyState == 4) {
-	  		exportProducts();
+			console.log('Export salepoints - end');
+	  		exportOffers();
 	  	}
  	};	
 	oXHR.open("PATCH", generatorURL + '/api/v1/salepoint/?username='+ username +'&password='+ password,true);
@@ -73,43 +73,53 @@ function exportSalepoints() {
 
 function exportOffers() {
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Экспорт предложений'});
-	var offers = Ext.data.StoreManager.lookup('Offers');
-	var filters = offers.getFilters();
-	offers.setFilters({filterFn: function() {return true;}});
-	offers.filter();
 	var data = [];
-	offers.each(function(offer) {
-		data.push({
-			source_code: offer.get('source_code'),
-			source_type: offer.get('source_type'),
-			salepoint_id: offer.get('salepoint_id'),
-			price: offer.get('price')
-		});
+	var offers = offersStore.load({
+		query: "select * from offers_tables where price > 0",
+		callback: function(items) {
+			for (var i=0; i<items.length; i++) {
+				var offer = items[i];
+				data.push({
+					source_code: offer.get('source_code'),
+					source_type: offer.get('source_type'),
+					salepoint_id: offer.get('salepoint_id'),
+					price: offer.get('price'),
+					title: offer.get('title'),
+					white_brand: offer.get('whitebrand_id'),
+					username: username
+				});
+			}
+			var to_export = JSON.stringify({objects: data});
+			var oXHR = new XMLHttpRequest();
+			oXHR.onreadystatechange = function (aEvt) {
+				if (oXHR.readyState == 4) {
+			  		importSalepoints();
+			  	}
+		 	};	
+			oXHR.open("PATCH", generatorURL + '/api/v1/offer/?username='+ username +'&password='+ password,true);
+			oXHR.setRequestHeader("Content-type","application/json");
+			oXHR.send(to_export);
+		}
 	});
-	offers.setFilters(filters);
-	offers.load();
-	// console.log(data);
-	// return;
-	var to_export = JSON.stringify({objects: data});
-	var oXHR = new XMLHttpRequest();
-	oXHR.onreadystatechange = function (aEvt) {
-		if (oXHR.readyState == 4) {
-			offers.removeAll();
-			offers.sync();
-	  		importSalepoints();
-	  	}
- 	};	
-	oXHR.open("PATCH", generatorURL + '/api/v1/offer/?username='+ username +'&password='+ password,true);
-	oXHR.setRequestHeader("Content-type","application/json");
-	oXHR.send(to_export);
-	return;
+	
+}
+
+function _truncateProducts() {
+	offersStore.getProxy().truncate(function() {
+		importProducts(generatorURL + '/api/v1/product/?limit=20');
+	});
 }
 
 function importProducts(url, offset, total) {
+	if (!url) {
+		_truncateProducts();
+		return;
+	}
 	var message = offset && total ? 'Импорт продуктов: ' + offset + ' из ' + total : 'Импорт продуктов';
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: message});
 	Ext.data.JsonP.request({
-		url: url ? url : generatorURL + '/api/v1/product/',
+		url: url ? url : generatorURL + '/api/v1/product/?limit=20',
+		// url: url ? url : generatorURL + '/api/v1/fuel_product/?limit=5',
 		callbackKey: 'callback',
 		params: {
 			format: 'jsonp',
@@ -121,35 +131,37 @@ function importProducts(url, offset, total) {
 			Ext.Msg.alert('Ошибка', 'Импорт не удался');
 		},
 		success: function(result) {
-			console.log(result);
-			var products = Ext.data.StoreManager.lookup('Products');
-			if (!url) {
-				products.setFilters({filterFn: function(item) {return true;}});
-				products.filter();
-				var x = products.getData().items.slice();
-				products.remove(x);
-				products.sync();
-			}
+			var salepoints = salepointsStore.load();
 			
-			for (var i=0; i<result.objects.length; i++) {
-				var data = result.objects[i];
-				var obj = {
-					title: data.title,
-					manufacturer: data.manufacturer,
-					whitebrand_id: data.whitebrand_id,
-					title_extra: data.title_extra,
-					source_code: data.source_code,
-					source_type: data.source_type,
-					type: data.type,
-					is_new: false
+			var db = openDatabase('monitoring', '1.19', 'monitoring', 2 * 1024 * 1024);
+			db.transaction(function (tx) {
+			  	for (var i=0; i<result.objects.length; i++) {
+					var data = result.objects[i];
+					salepoints.each(function(salepoint) {
+						// var new_offer = {
+							// title: data.title+(data.manufacturer ? '. ' + data.manufacturer : '')+(data.title_extra ? '. ' + data.title_extra : ''),
+							// whitebrand_id: data.whitebrand_id,
+							// source_code: data.source_code,
+							// source_type: data.source_type,
+							// is_new: 0,
+							// salepoint_id: salepoint.get('ext_id'),
+							// price: null
+						// }
+						tx.executeSql('INSERT INTO offers_tables (title, whitebrand_id, source_code, source_type, is_new, salepoint_id, price, sort_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
+							[data.title+(data.manufacturer ? '. ' + data.manufacturer : '')+(data.title_extra ? '. ' + data.title_extra : ''),
+							data.whitebrand_id, data.source_code.toString(), data.source_type,
+							false, salepoint.get('ext_id'), null, data.sort_weight]);
+					});
 				}
-				products.add(obj)[0];
-			}
-			products.sync();
+			  
+			}, function(tx, error) {
+				console.log(tx.message);
+			});
 			
 			if (result.meta.next == null) {
 				Ext.Viewport.setMasked(false);
 				Ext.Msg.alert('Информация', 'Импорт успешно завершен');
+				Ext.getCmp('main-view').pop(10);
 			} else {
 				importProducts(generatorURL + result.meta.next, result.meta.offset + result.meta.limit, result.meta.total_count);
 			}
@@ -157,7 +169,18 @@ function importProducts(url, offset, total) {
 	});
 }
 
-function importBrands() {
+function _truncateBrands() {
+	brandsStore.getProxy().truncate(function() {
+		importBrands(true);
+	});
+}
+
+function importBrands(truncated) {
+	if (!truncated) {
+		_truncateBrands();
+		return;
+	}
+	
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Импорт брендов'});
 	Ext.data.JsonP.request({
 		url: generatorURL + '/api/v1/whitebrand/',
@@ -166,17 +189,17 @@ function importBrands() {
 			format: 'jsonp',
 			username: username,
 			password: password,
+<<<<<<< HEAD
 			limit: 30
+=======
+			limit: 0
+>>>>>>> 85a99a50f530da65fbce63745011a4bf8c40b34e
 		},
 		failure: function() {
 			Ext.Viewport.setMasked(false);
 			Ext.Msg.alert('Ошибка', 'Импорт не удался');
 		},
 		success: function(result) {
-			console.log(result);
-			var brands = Ext.data.StoreManager.lookup('Brands');
-			brands.removeAll();
-			
 			// перебираем все бренды и добавляем их в store
 			for (var i=0; i<result.objects.length; i++) {
 				var data = result.objects[i];
@@ -184,19 +207,29 @@ function importBrands() {
 					name: data.name,
 					ext_id: data.ext_id
 				}
-				brands.add(obj)[0];
+				var rec = Ext.create('Monitoring.model.Brand', obj);
+				rec.save();
 			}
-			brands.sync();
-			
 			importProducts();
 		}
 	});
 }
 
-function importSalepoints() {
-	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Импорт магазинов'});
+function _truncateSalepoints() {
+	salepointsStore.getProxy().truncate(function() {
+		importSalepoints(generatorURL + '/api/v1/salepoint/?limit=20');
+	});
+}
+
+function importSalepoints(url, offset, total) {
+	if (!url) {
+		_truncateSalepoints();
+		return;
+	}
+	var message = offset && total ? 'Импорт магазинов: ' + offset + ' из ' + total : 'Импорт магазинов';
+	Ext.Viewport.setMasked({xtype: 'loadmask', message: message});
 	Ext.data.JsonP.request({
-		url: generatorURL + '/api/v1/salepoint/',
+		url: url ? url : generatorURL + '/api/v1/salepoint/?limit=20',
 		callbackKey: 'callback',
 		params: {
 			format: 'jsonp',
@@ -208,10 +241,6 @@ function importSalepoints() {
 			Ext.Msg.alert('Ошибка', 'Импорт не удался');
 		},
 		success: function(result) {
-			console.log(result);
-			var salepoints = Ext.data.StoreManager.lookup('Salepoints');
-			salepoints.removeAll();
-			
 			// перебираем все магазины и добавляем их в store
 			for (var i=0; i<result.objects.length; i++) {
 				var data = result.objects[i];
@@ -223,11 +252,15 @@ function importSalepoints() {
 					type: data.variation,
 					ext_id: data.id
 				}
-				salepoints.add(obj)[0];
+				var rec = Ext.create('Monitoring.model.Salepoint', obj);
+				rec.save();
 			}
-			salepoints.sync();
 			
-			importBrands();
+			if (result.meta.next == null) {
+				importBrands();
+			} else {
+				importSalepoints(generatorURL + result.meta.next, result.meta.offset + result.meta.limit, result.meta.total_count);
+			}
 		}
 	});
 }

@@ -34,8 +34,13 @@ Ext.define('Monitoring.forms.Sync', {
             text: 'Синхронизация',
             ui: 'confirm',
 			handler: function() {
-				exportSalepoints();
+				exportOffers();
 			}
+        },
+        {
+        	xtype: 'label',
+        	html: 'V1.0 11.05.2012',
+        	id: 'version-info'
         }]
 	}
 });
