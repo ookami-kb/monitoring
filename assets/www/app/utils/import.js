@@ -1,76 +1,5 @@
 var generatorURL = 'http://upload.v-zabote.ru';
 
-function exportProducts() {
-	console.log('Export products - start');
-	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Экспорт продуктов'});
-	var salepoints = Ext.data.StoreManager.lookup('Products');
-	var filters = salepoints.getFilters();
-	salepoints.setFilters({property: 'is_new', value: true});
-	salepoints.filter();
-	var data = [];
-	salepoints.each(function(salepoint) {
-		data.push({
-			title: salepoint.get('title'),
-			white_brand: salepoint.get('whitebrand_id'),
-			source_code: salepoint.get('source_code'),
-			source_type: salepoint.get('source_type'),
-			username: username
-		});
-	});
-	salepoints.setFilters(filters);
-	salepoints.load();
-	// console.log(data);
-	// return;
-	var to_export = JSON.stringify({objects: data});
-	// console.log(to_export);
-	// return;
-	var oXHR = new XMLHttpRequest();
-	oXHR.onreadystatechange = function (aEvt) {
-		if (oXHR.readyState == 4) {
-			console.log('Export products - end');
-	  		exportOffers();
-	  	}
- 	};	
-	oXHR.open("PATCH", generatorURL + '/api/v1/product/?username='+ username +'&password='+ password,true);
-	oXHR.setRequestHeader("Content-type","application/json");
-	oXHR.send(to_export);
-	return;
-}
-
-function exportSalepoints() {
-	console.log('Export salepoints - start');
-	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Экспорт торговых точек'});
-	var salepoints = Ext.data.StoreManager.lookup('Salepoints');
-	var filters = salepoints.getFilters();
-	salepoints.setFilters({property: 'is_new', value: true});
-	salepoints.filter();
-	var data = [];
-	salepoints.each(function(salepoint) {
-		data.push({
-			name: salepoint.get('name'),
-			address: salepoint.get('address'),
-			coords: salepoint.get('coords'),
-			salepoint_id: salepoint.get('ext_id'),
-			username: username,
-			variation: salepoint.get('type')
-		});
-	});
-	salepoints.setFilters(filters);
-	salepoints.load();
-	var to_export = JSON.stringify({objects: data});
-	var oXHR = new XMLHttpRequest();
-	oXHR.onreadystatechange = function (aEvt) {
-		if (oXHR.readyState == 4) {
-			console.log('Export salepoints - end');
-	  		exportOffers();
-	  	}
- 	};	
-	oXHR.open("PATCH", generatorURL + '/api/v1/salepoint/?username='+ username +'&password='+ password,true);
-	oXHR.setRequestHeader("Content-type","application/json");
-	oXHR.send(to_export);
-	return;
-}
-
 function exportOffers() {
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Экспорт предложений'});
 	var data = [];
@@ -93,7 +22,12 @@ function exportOffers() {
 			var oXHR = new XMLHttpRequest();
 			oXHR.onreadystatechange = function (aEvt) {
 				if (oXHR.readyState == 4) {
-			  		importSalepoints();
+					if (oXHR.status != 202) {
+						Ext.Viewport.setMasked(false);
+						Ext.Msg.alert('Ошибка', oXHR.status + ': ' + oXHR.statusText);
+					} else {
+						_truncateSalepoints();
+					}
 			  	}
 		 	};	
 			oXHR.open("PATCH", generatorURL + '/api/v1/offer/?username='+ username +'&password='+ password,true);
@@ -105,16 +39,13 @@ function exportOffers() {
 }
 
 function _truncateProducts() {
+	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Удаление предложений'});
 	offersStore.getProxy().truncate(function() {
-		importProducts(generatorURL + '/api/v1/product/?limit=20');
+		importSalepoints();
 	});
 }
 
 function importProducts(url, offset, total) {
-	if (!url) {
-		_truncateProducts();
-		return;
-	}
 	var message = offset && total ? 'Импорт продуктов: ' + offset + ' из ' + total : 'Импорт продуктов';
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: message});
 	Ext.data.JsonP.request({
@@ -126,9 +57,9 @@ function importProducts(url, offset, total) {
 			username: username,
 			password: password
 		},
-		failure: function() {
+		failure: function(result) {
 			Ext.Viewport.setMasked(false);
-			Ext.Msg.alert('Ошибка', 'Импорт не удался');
+			Ext.Msg.alert('Ошибка', 'Импорт продуктов: ' + result);
 		},
 		success: function(result) {
 			var salepoints = salepointsStore.load();
@@ -138,15 +69,6 @@ function importProducts(url, offset, total) {
 			  	for (var i=0; i<result.objects.length; i++) {
 					var data = result.objects[i];
 					salepoints.each(function(salepoint) {
-						// var new_offer = {
-							// title: data.title+(data.manufacturer ? '. ' + data.manufacturer : '')+(data.title_extra ? '. ' + data.title_extra : ''),
-							// whitebrand_id: data.whitebrand_id,
-							// source_code: data.source_code,
-							// source_type: data.source_type,
-							// is_new: 0,
-							// salepoint_id: salepoint.get('ext_id'),
-							// price: null
-						// }
 						tx.executeSql('INSERT INTO offers_tables (title, whitebrand_id, source_code, source_type, is_new, salepoint_id, price, sort_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
 							[data.title+(data.manufacturer ? '. ' + data.manufacturer : '')+(data.title_extra ? '. ' + data.title_extra : ''),
 							data.whitebrand_id, data.source_code.toString(), data.source_type,
@@ -155,7 +77,7 @@ function importProducts(url, offset, total) {
 				}
 			  
 			}, function(tx, error) {
-				console.log(tx.message);
+				Ext.Msg.alert('Ошибка', tx.message);
 			});
 			
 			if (result.meta.next == null) {
@@ -170,17 +92,13 @@ function importProducts(url, offset, total) {
 }
 
 function _truncateBrands() {
+	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Удаление брендов'});
 	brandsStore.getProxy().truncate(function() {
-		importBrands(true);
+		_truncateProducts();
 	});
 }
 
-function importBrands(truncated) {
-	if (!truncated) {
-		_truncateBrands();
-		return;
-	}
-	
+function importBrands() {
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Импорт брендов'});
 	Ext.data.JsonP.request({
 		url: generatorURL + '/api/v1/whitebrand/',
@@ -191,9 +109,9 @@ function importBrands(truncated) {
 			password: password,
 			limit: 0
 		},
-		failure: function() {
+		failure: function(result) {
 			Ext.Viewport.setMasked(false);
-			Ext.Msg.alert('Ошибка', 'Импорт не удался');
+			Ext.Msg.alert('Ошибка', 'Импорт брендов: ' + result);
 		},
 		success: function(result) {
 			// перебираем все бренды и добавляем их в store
@@ -212,16 +130,13 @@ function importBrands(truncated) {
 }
 
 function _truncateSalepoints() {
+	Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Удаление магазинов'});
 	salepointsStore.getProxy().truncate(function() {
-		importSalepoints(generatorURL + '/api/v1/salepoint/?limit=20');
+		_truncateBrands();
 	});
 }
 
 function importSalepoints(url, offset, total) {
-	if (!url) {
-		_truncateSalepoints();
-		return;
-	}
 	var message = offset && total ? 'Импорт магазинов: ' + offset + ' из ' + total : 'Импорт магазинов';
 	Ext.Viewport.setMasked({xtype: 'loadmask', message: message});
 	Ext.data.JsonP.request({
@@ -232,9 +147,9 @@ function importSalepoints(url, offset, total) {
 			username: username,
 			password: password
 		},
-		failure: function() {
+		failure: function(result) {
 			Ext.Viewport.setMasked(false);
-			Ext.Msg.alert('Ошибка', 'Импорт не удался');
+			Ext.Msg.alert('Ошибка', 'Импорт магазинов: ' + result);
 		},
 		success: function(result) {
 			// перебираем все магазины и добавляем их в store

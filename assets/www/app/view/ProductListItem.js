@@ -31,7 +31,11 @@ Ext.define('Monitoring.view.ProductListItem', {
         		change: function(field, newValue, oldValue, opts) {
         			field.parent.getRecord().set({price: newValue});
         			var val = field.parent.getRecord().getData();
-        			Ext.create('Monitoring.model.Offer', val, val.id).save();
+        			Ext.create('Monitoring.model.Offer', val, val.id).save({
+        				failure: function() {
+        					Ext.Msg.alert('Ошибка', 'Не удалось сохранить предложение');
+        				}
+        			});
         		}
         	}
         },

@@ -39,7 +39,7 @@ Ext.define('Monitoring.forms.Sync', {
         },
         {
         	xtype: 'label',
-        	html: 'V1.0 11.05.2012',
+        	html: 'V1.1 12.05.2012',
         	id: 'version-info'
         }]
 	}

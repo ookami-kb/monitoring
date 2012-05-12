@@ -236,7 +236,6 @@ Ext.application({
 		    	cls: 'product-list',
 		    	defaultType: 'productlistitem',
 			    id: 'pr-list',
-			    // itemTpl: ['{title} {source_code} {price}'],
 			    store: offersStore,
 		    }
 		});
