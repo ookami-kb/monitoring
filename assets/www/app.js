@@ -192,27 +192,40 @@ Ext.application({
 			    store: salepointsStore,
 			    listeners: {
 			    	select: function(list, record, options) {
+			    		Ext.Viewport.setMasked({xtype: 'loadmask', message: 'Загрузка...'});
 			    		var v = Ext.getCmp('main-view');
 			    		// Запоминаем выбранную точку продаж
 		    			v.selectedSPid = record.get('ext_id');
 			    		// для продуктовых ТТ выводим список белых брендов
 			    		if (record.get('type') == 'product') {
 			    			brandsStore.load({
-			    				query: 'select * from brands_tables order by name'
+			    				query: 'select * from brands_tables order by name',
+			    				callback: function(items) {
+					    			var l = Ext.create('Monitoring.view.BrandList', {title: record.get('name')});
+							    	
+							    	Ext.Viewport.setMasked(false);
+							    	v.push(l);
+							    	list.deselectAll();
+					    		}
 			    			});
-			    			var l = Ext.create('Monitoring.view.BrandList', {title: record.get('name')});	
+			    				
 			    		} else {
+			    			
 			    			v.selectedWBID = 0;
 				    		var query = 'select * from offers_tables WHERE whitebrand_id = ' + v.selectedWBID + ' and salepoint_id = ' + v.selectedSPid + ' order by sort_weight, title';
 					    	offersStore.load({
-					    		query : query
+					    		query : query,
+					    		callback: function(items) {
+					    			var l = Ext.create('Monitoring.view.ProductList', {title: record.get('name')});
+							    	
+							    	Ext.Viewport.setMasked(false);
+							    	v.push(l);
+							    	list.deselectAll();
+					    		}
 				    		});
 				    	
-					    	var l = Ext.create('Monitoring.view.ProductList', {title: record.get('name')});
 			    		}
 		    			
-		    			v.push(l);
-			    		list.deselectAll();
 			    	},
 			    	itemswipe: function(dataview, index, target, record, e, eOpts) {
 			    		if (!record.get('is_new')) return;
